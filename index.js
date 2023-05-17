@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const app = express();
@@ -28,7 +28,7 @@ const verifyJWT = (req, res, next) => {
     const token = authorization.split(" ")[1];
     jwt.verify(token, process.env.SECRET_KEY, function (err, decoded) {
         if (err) {
-            return res.status(403).send({error: true, message: "no varified token found. access denied"})
+            return res.status(403).send({error: true, message: "no verified token found. access denied"})
         }
 
         res.decoded = decoded;
@@ -41,10 +41,64 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        const toyCollection = client.db('toyCluster').collection('toyCollection');
+
         app.post('/jwt', (req, res) => {
             const userEmail = req.body;
             const token = jwt.sign(userEmail, process.env.SECRET_KEY, { expiresIn: '1h' });
             res.send({token});
+        });
+
+        app.get('/toyCollection', async(req, res) => {
+            const result = await toyCollection.find().toArray();
+            res.send(result);
+        });
+
+        app.get('/singleToyDetail/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+
+            const result = await toyCollection.findOne({query});
+            res.send(result);
+        });
+
+        app.get('/userToys', verifyJWT, async(req, res) => {
+            const decodedEmail = res.decoded.email;
+            const userEmail = req.body.email;
+
+            if (userEmail !== decodedEmail) return res.status(403).send({ error: 1, message: 'forbidden access' });
+
+            let query = {};
+            if(req.query?.email) {
+                query = {email: req.query.email};
+            }
+
+            const result = await toyCollection.find(query).toArray();
+            res.send(result);
+        });
+
+        app.patch('/toyCollection/:id', async(req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+
+            const filter = {_id: new ObjectId(id)};
+            const updatedDoc = {
+                $set: {
+                    price: data.price,
+                    avalaibleQuantity: data.avalaibleQuantity,
+                    detailDescription: data.detailDescription
+                }
+            }
+
+            const result = await toyCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        });
+
+        app.delete('/toyCollection/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)};
+            const result = await toyCollection.deleteOne(query);
+            res.send(result);
         });
 
         // Send a ping to confirm a successful connection
