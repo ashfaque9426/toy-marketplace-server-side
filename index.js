@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -18,10 +19,34 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+const verifyJWT = (req, res, next) => {
+    const authorization = req.headers.authorization;
+
+    if(!authorization) return res.status(401).send({error: true, message: "Bad Authorization, Unauthorized Access"});
+
+    const token = authorization.split(" ")[1];
+    jwt.verify(token, process.env.SECRET_KEY, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({error: true, message: "no varified token found. access denied"})
+        }
+
+        res.decoded = decoded;
+        next();
+    });
+}
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+
+        app.post('/jwt', (req, res) => {
+            const userEmail = req.body;
+            const token = jwt.sign(userEmail, process.env.SECRET_KEY, { expiresIn: '1h' });
+            res.send({token});
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
