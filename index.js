@@ -54,6 +54,16 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/toyCollection/:text', async(req, res) => {
+            const searchedText = req.params.text;
+            
+            const result = await toyCollection.find({
+                toyName: { $regex: searchedText, $options: "i" }
+            }).toArray();
+
+            res.send(result);
+        });
+
         app.get('/singleToyDetail/:id', async(req, res) => {
             const id = req.params.id;
             const query = {_id: new ObjectId(id)}
@@ -73,7 +83,12 @@ async function run() {
                 query = {email: req.query.email};
             }
 
-            const result = await toyCollection.find(query).toArray();
+            const sortType = req.query.type === 'ascending';
+            const value = req.query.value;
+            const sortObj = {};
+            sortObj[value] = sortType ? 1 : -1;
+
+            const result = await toyCollection.find(query).sort(sortObj).toArray();
             res.send(result);
         });
 
