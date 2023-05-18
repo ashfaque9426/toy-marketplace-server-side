@@ -50,7 +50,7 @@ async function run() {
         });
 
         app.get('/toyCollection', async(req, res) => {
-            const limitedTo = req.query.limit;
+            const limitedTo = parseInt(req.query.limit);
             const result = await toyCollection.find().limit(limitedTo).toArray();
             res.send(result);
         });
