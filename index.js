@@ -87,13 +87,15 @@ async function run() {
 
         app.get('/userToys', verifyJWT, async(req, res) => {
             const decodedEmail = res.decoded.email;
-            const userEmail = req.body.email;
+            const userEmail = req.query.email;
+
+            console.log(decodedEmail, userEmail);
 
             if (userEmail !== decodedEmail) return res.status(403).send({ error: 1, message: 'forbidden access' });
 
             let query = {};
             if(req.query?.email) {
-                query = {email: req.query.email};
+                query = { sellerEmail: req.query.email };
             }
 
             const sortType = req.query.type === 'ascending';
