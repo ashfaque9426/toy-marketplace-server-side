@@ -105,6 +105,12 @@ async function run() {
             res.send(result);
         });
 
+        app.post('/addAToy', async(req, res) => {
+            const addedData = req.body;
+            const result = await toyCollection.insertOne(addedData);
+            res.send(result);
+        });
+
         app.patch('/toyCollection/:id', async(req, res) => {
             const id = req.params.id;
             const data = req.body;
