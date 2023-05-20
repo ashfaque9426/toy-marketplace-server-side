@@ -122,7 +122,7 @@ async function run() {
             const updatedDoc = {
                 $set: {
                     price: data.price,
-                    availaibleQuantity: data.availaibleQuantity,
+                    availableQuantity: data.availableQuantity,
                     detailDescription: data.detailDescription
                 }
             }
