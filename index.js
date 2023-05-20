@@ -116,12 +116,13 @@ async function run() {
         app.patch('/toyCollection/:id', async(req, res) => {
             const id = req.params.id;
             const data = req.body;
+            console.log(data);
 
             const filter = {_id: new ObjectId(id)};
             const updatedDoc = {
                 $set: {
                     price: data.price,
-                    avalaibleQuantity: data.avalaibleQuantity,
+                    avalaibleQuantity: data.availaibleQuantity,
                     detailDescription: data.detailDescription
                 }
             }
